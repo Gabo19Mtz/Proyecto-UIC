@@ -1,26 +1,16 @@
-import React, { useEffect, useState } from "react";
-import api from "./api";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Register from "./components/Register";
 
 function App() {
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    api
-      .get("/")
-      .then((response) => {
-        setMessage(response.data);
-      })
-      .catch((error) => {
-        console.error("Error al obtener datos del backend", error);
-      });
-  }, []);
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>{message}</p>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
