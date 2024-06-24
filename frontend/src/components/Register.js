@@ -1,22 +1,21 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { register } from "../services/api";
 
 const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:3001/register", {
-        username,
-        email,
-        password,
-      });
+      const response = await register(username, email, password);
       setMessage(response.data.message);
+      navigate("/login");
     } catch (error) {
       if (error.response && error.response.data) {
         setMessage(error.response.data.message || "Error al registrar usuario");
@@ -28,10 +27,10 @@ const Register = () => {
 
   return (
     <div>
-      <h2>Registro de Usuario</h2>
+      <h2>Registro</h2>
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Username:</label>
+          <label>Nombre de usuario:</label>
           <input
             type="text"
             value={username}
@@ -49,7 +48,7 @@ const Register = () => {
           />
         </div>
         <div>
-          <label>Password:</label>
+          <label>Contraseña:</label>
           <input
             type="password"
             value={password}
