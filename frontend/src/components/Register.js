@@ -1,67 +1,53 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { register } from "../services/api";
-import "../Auth.css";
+import "./Auth.css";
 
 const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await register(username, email, password);
-      setMessage(response.data.message);
-      navigate("/login");
+      await register({ username, email, password });
+      alert("Registro exitoso");
+      window.location.href = "/";
     } catch (error) {
-      if (error.response && error.response.data) {
-        setMessage(error.response.data.message || "Error al registrar usuario");
-      } else {
-        setMessage("Error de red. Inténtalo de nuevo más tarde.");
-      }
+      alert("Error al registrar usuario");
     }
   };
 
   return (
     <div className="auth-container">
-      <div className="auth-box">
+      <form className="auth-form" onSubmit={handleSubmit}>
         <h2>Registro</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Nombre de usuario:</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Email:</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Contraseña:</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit">Registrar</button>
-        </form>
-        {message && <p>{message}</p>}
-      </div>
+        <input
+          type="text"
+          placeholder="Nombre de Usuario"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+        <input
+          type="email"
+          placeholder="Correo Electrónico"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit">Registrarse</button>
+        <p>
+          ¿Ya tienes una cuenta? <a href="/">Iniciar sesión</a>
+        </p>
+      </form>
     </div>
   );
 };

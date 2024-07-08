@@ -3,49 +3,27 @@ const { Sequelize, DataTypes } = require("sequelize");
 const bcrypt = require("bcrypt");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const sequelize = require("./config/database");
+const User = require("./models/User");
+const Budget = require("./models/Budget");
+const Expense = require("./models/Expense");
 
 const app = express();
 const port = 3001;
 const secretKey = "G@boFerMTZ191203ññ$%";
 
-// Configuración de la base de datos
-const sequelize = new Sequelize("proyectouic", "postgres", "gabo191203", {
-  host: "localhost",
-  dialect: "postgres",
-});
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Definición del modelo de Usuario
-const User = sequelize.define("User", {
-  username: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-});
-
+// Sincronización de los modelos
 sequelize
   .sync()
   .then(() => {
-    console.log("Base de datos y tabla de usuarios sincronizadas");
+    console.log("Base de datos y tablas sincronizadas");
   })
   .catch((error) => {
     console.error("Error al sincronizar la base de datos:", error);
   });
-
-app.use(cors());
-app.use(express.json());
 
 // Ruta para el registro de usuarios
 app.post("/register", async (req, res) => {
@@ -89,6 +67,73 @@ app.post("/login", async (req, res) => {
     res
       .status(500)
       .json({ message: "Error al iniciar sesión", error: error.message });
+  }
+});
+
+// Ruta para crear presupuestos
+app.post("/budgets", async (req, res) => {
+  const { name, amount } = req.body;
+
+  try {
+    const budget = await Budget.create({
+      name,
+      amount,
+    });
+    res
+      .status(201)
+      .json({ message: "Presupuesto creado exitosamente", budget });
+  } catch (error) {
+    console.error("Error al crear presupuesto:", error);
+    res
+      .status(500)
+      .json({ message: "Error al crear presupuesto", error: error.message });
+  }
+});
+
+// Ruta para obtener presupuestos
+app.get("/budgets", async (req, res) => {
+  try {
+    const budgets = await Budget.findAll();
+    res.status(200).json(budgets);
+  } catch (error) {
+    console.error("Error al obtener presupuestos:", error);
+    res
+      .status(500)
+      .json({ message: "Error al obtener presupuestos", error: error.message });
+  }
+});
+
+// Ruta para crear gastos
+app.post("/expenses", async (req, res) => {
+  const { description, amount, budgetId } = req.body;
+
+  try {
+    const expense = await Expense.create({
+      description,
+      amount,
+      budgetId,
+    });
+    res.status(201).json({ message: "Gasto creado exitosamente", expense });
+  } catch (error) {
+    console.error("Error al crear gasto:", error);
+    res
+      .status(500)
+      .json({ message: "Error al crear gasto", error: error.message });
+  }
+});
+
+// Ruta para obtener gastos por presupuesto
+app.get("/expenses", async (req, res) => {
+  const { budgetId } = req.query;
+
+  try {
+    const expenses = await Expense.findAll({ where: { budgetId } });
+    res.status(200).json(expenses);
+  } catch (error) {
+    console.error("Error al obtener gastos:", error);
+    res
+      .status(500)
+      .json({ message: "Error al obtener gastos", error: error.message });
   }
 });
 

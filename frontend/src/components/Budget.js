@@ -2,55 +2,59 @@ import React, { useState, useEffect } from "react";
 import { createBudget, getBudgets } from "../services/api";
 
 const Budget = () => {
+  const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [budgets, setBudgets] = useState([]);
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
+    const fetchBudgets = async () => {
+      try {
+        const response = await getBudgets();
+        setBudgets(response.data);
+      } catch (error) {
+        console.error("Error al obtener presupuestos:", error);
+      }
+    };
+
     fetchBudgets();
   }, []);
-
-  const fetchBudgets = async () => {
-    try {
-      const response = await getBudgets();
-      setBudgets(response.data);
-    } catch (error) {
-      setMessage("Error al cargar presupuestos");
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createBudget(amount);
-      setMessage("Presupuesto creado exitosamente");
-      fetchBudgets();
+      const response = await createBudget({ name, amount });
+      setBudgets([...budgets, response.data.budget]);
+      setName("");
+      setAmount("");
     } catch (error) {
-      setMessage("Error al crear presupuesto");
+      console.error("Error al crear presupuesto:", error);
     }
   };
 
   return (
     <div>
-      <h2>Establecer Presupuesto</h2>
+      <h2>Presupuestos</h2>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Monto:</label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="Nombre del presupuesto"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <input
+          type="number"
+          placeholder="Monto"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
+        />
         <button type="submit">Crear Presupuesto</button>
       </form>
-      {message && <p>{message}</p>}
-      <h2>Presupuestos</h2>
       <ul>
         {budgets.map((budget) => (
           <li key={budget.id}>
-            {budget.description}: ${budget.amount}
+            {budget.name} - {budget.amount}
           </li>
         ))}
       </ul>

@@ -1,66 +1,87 @@
 import React, { useState, useEffect } from "react";
 import { createExpense, getExpenses } from "../services/api";
+import { getBudgets } from "../services/api";
 
 const Expense = () => {
-  const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [budgetId, setBudgetId] = useState("");
   const [expenses, setExpenses] = useState([]);
-  const [message, setMessage] = useState("");
+  const [budgets, setBudgets] = useState([]);
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    const fetchExpenses = async () => {
+      try {
+        const response = await getExpenses({ budgetId });
+        setExpenses(response.data);
+      } catch (error) {
+        console.error("Error al obtener gastos:", error);
+      }
+    };
 
-  const fetchExpenses = async () => {
-    try {
-      const response = await getExpenses();
-      setExpenses(response.data);
-    } catch (error) {
-      setMessage("Error al cargar gastos");
+    const fetchBudgets = async () => {
+      try {
+        const response = await getBudgets();
+        setBudgets(response.data);
+      } catch (error) {
+        console.error("Error al obtener presupuestos:", error);
+      }
+    };
+
+    fetchBudgets();
+    if (budgetId) {
+      fetchExpenses();
     }
-  };
+  }, [budgetId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createExpense(amount, description);
-      setMessage("Gasto registrado exitosamente");
-      fetchExpenses();
+      const response = await createExpense({ description, amount, budgetId });
+      setExpenses([...expenses, response.data.expense]);
+      setDescription("");
+      setAmount("");
     } catch (error) {
-      setMessage("Error al registrar gasto");
+      console.error("Error al crear gasto:", error);
     }
   };
 
   return (
     <div>
-      <h2>Registrar Gasto</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Monto:</label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Descripción:</label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Registrar Gasto</button>
-      </form>
-      {message && <p>{message}</p>}
       <h2>Gastos</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Descripción del gasto"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+        />
+        <input
+          type="number"
+          placeholder="Monto"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
+        />
+        <select
+          value={budgetId}
+          onChange={(e) => setBudgetId(e.target.value)}
+          required
+        >
+          <option value="">Seleccione un presupuesto</option>
+          {budgets.map((budget) => (
+            <option key={budget.id} value={budget.id}>
+              {budget.name}
+            </option>
+          ))}
+        </select>
+        <button type="submit">Crear Gasto</button>
+      </form>
       <ul>
         {expenses.map((expense) => (
           <li key={expense.id}>
-            {expense.description}: ${expense.amount}
+            {expense.description} - {expense.amount}
           </li>
         ))}
       </ul>
